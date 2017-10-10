@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title></title>    
+    
+    <!-- Including alphaTab -->
+    <script type="text/javascript" src="lib/alphaTab/AlphaTab.js"></script>
+
+    <!-- jQuery Plugin -->
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>    
+    <script type="text/javascript" src="lib/alphaTab/jquery.alphaTab.js"></script>
+   
+    <!-- Including alphaSynth -->
+    <script type="text/javascript" src="lib/swfobject/swfobject.js"></script>
+    <script type="text/javascript" src="lib/alphaSynth/AlphaSynth.js"></script>
+    
+    <!-- alphaSynth Plugin -->
+    <script type="text/javascript" src="lib/alphaTab/jquery.alphaTab.alphaSynth.js"></script>
+    
+    <!-- Demo Styles and Scripts -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.7.2/css/bootstrap-slider.min.css" integrity="sha256-6b+gYy3DG/roKdQiHqp1FJYFQkaZdM6ohUpGyFyUAGk=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.7.2/bootstrap-slider.min.js" integrity="sha256-dd5QxcG/E8fb/H/iIQann2y2EDS0nEMVI56yYWFeeW4=" crossorigin="anonymous"></script>    
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="support/demo.css" />
+    <style type="text/css">
+    .selectionWrapper div { /* Defines the color of the selection background */
+        opacity: 0.1;
+        background:#4040FF;
+    }
+
+    .beatCursor { /* Defines the beat cursor */
+        opacity: 0.75;
+        background:#4040FF;
+    }
+    
+    .atHighlight * { /* Defines the color of the music symbols when they are being played (svg) */
+        fill: #0078ff;
+    }
+    
+    
+    /* Track selector */
+    #trackList li {
+        padding: 5px;
+    }
+    #trackList .btn {
+        background: none;
+        outline: none;
+    }
+    #trackList .solo.checked {
+        background: #426d9d;
+        color: #FFF;
+    }
+    #trackList .mute.checked {
+        background: #c9302c;
+        color: #FFF;
+    }
+    #trackList .title {
+        cursor: pointer;
+    }
+    #trackList .title:hover {
+        color: #426d9d;
+    }
+    #trackList .btn-group {
+    }
+    
+    #trackList .slider-handle {
+        -moz-transform: scale(0.5, 0.5);
+        -webkit-transform: scale(0.5, 0.5);
+        transform: scale(0.5, 0.5);
+    }
+    </style>
+</head>
+<body>
+    <!-- Toolbar containing the buttons -->
+    <nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">
+              Player Demo
+          </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <!-- Player controls -->
+          <ul class="nav navbar-nav">
+            <li><button id="playPause" disabled="disabled" class="btn btn-link navbar-btn glyphicon glyphicon-play"></button></li>
+            <li><button id="stop" disabled="disabled" class="btn btn-link navbar-btn glyphicon glyphicon-stop"></button></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Speed: <span id="playbackSpeed">100%</span> <span class="caret"></span></a>
+              <ul class="dropdown-menu" id="playbackSpeedSelector">
+                <li><a href="#" data-value="0.25">25%</a></li>
+                <li><a href="#" data-value="0.5">50%</a></li>
+                <li><a href="#" data-value="0.6">60%</a></li>
+                <li><a href="#" data-value="0.7">70%</a></li>
+                <li><a href="#" data-value="0.8">80%</a></li>
+                <li><a href="#" data-value="0.9">90%</a></li>
+                <li><a href="#" data-value="1">100%</a></li>
+                <li><a href="#" data-value="1.1">110%</a></li>
+                <li><a href="#" data-value="1.25">125%</a></li>
+                <li><a href="#" data-value="1.5">150%</a></li>
+                <li><a href="#" data-value="2">200%</a></li>
+              </ul>
+            </li>
+            <li><a href="#" id="looping" class="glyphicon glyphicon-refresh"></a></li>
+            <li><a href="#" id="metronome" class="glyphicon glyphicon-edit" data-toggle="tooltip" data-placement="bottom" title="Metronome"></a></li>
+           
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <!-- Loading indicator for soundfont -->
+            <li id="soundFontProgressMenuItem">
+                <p class="navbar-text">SoundFont</p>
+                <div class="progress">
+                  <div class="progress-bar" id="soundFontProgress" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                    0%
+                  </div>
+                </div>
+            </li>
+            <!-- Print Button -->
+            <li><a href="#" id="print">Print</a></li>
+            <!-- Track Selector -->
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" id="currentTrack">
+                    Tracks
+                </a>
+                <ul class="dropdown-menu" id="trackList">
+                </ul>
+            </li>            
+            <!-- Buttons for changing the layout -->
+            <li class="active"><a href="#" id="page" data-layout="page" data-scrollmode="vertical">Page</a></li>
+            <li><a href="#" id="horizontalBarwise" data-layout="horizontal" data-scrollmode="horizontal-bar">Horizontal (Barwise)</a></li>
+            <li><a href="#" id="horizontalOffscreen" data-layout="horizontal" data-scrollmode="horizontal-offscreen">Horizontal (Offscreen)</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- 
+    data-player enables the player 
+    data-player-offset specifies the additional offset to apply when scrolling. 
+                       in this sample we scroll 70px up for vertical layouts because the menubar would overlap the tablature otherwise. 
+                       the 10px are to have a small horizontal padding. 
+    -->
+    <div id="alphaTab" data-file="files/HPBD.gp5"
+        data-player="lib/alphaSynth/default.sf2"
+        data-player-offset="[-10,-70]"></div>
+    <!-- <script type="text/javascript" src="https://bernii.github.io/gauge.js/dist/gauge.min.js"></script> -->
+    <script type="text/javascript">
+        var currentNote = '';
+        var currentBeat = null;
+        var stop = false;
+        $(document).ready(function () {
+            'use strict';
+
+            var baseFreq = 440;
+            var currentNoteIndex = 57; // A4
+            var isRefSoundPlaying = false;
+            var isMicrophoneInUse = false;
+            var frameId,
+                freqTable,
+                gauge,
+                micStream,
+                notesArray,
+                audioContext,
+                sourceAudioNode,
+                analyserAudioNode;
+            var	pitches = {
+                    'A0'  : 27.5000,
+                    'A#0' : 29.1352,
+                    'Bb0' : 29.1352,
+                    'B0'  : 30.8677,
+                    'B#0'  : 32.7032,
+                    'Cb1'  : 30.8677,
+                    'C1'  : 32.7032,
+                    'C#1' : 34.6478,
+                    'Db1' : 34.6478,
+                    'D1'  : 36.7081,
+                    'D#1' : 38.8909,
+                    'Eb1' : 38.8909,
+                    'E1'  : 41.2034,
+                    'Fb1'  : 41.2034,
+                    'E#1'  : 43.6535,
+                    'F1'  : 43.6535,
+                    'F#1' : 46.2493,
+                    'Gb1' : 46.2493,
+                    'G1'  : 48.9994,
+                    'G#1' : 51.9131,
+                    'Ab1' : 51.9131,
+                    'A1'  : 55.0000,
+                    'A#1' : 58.2705,
+                    'Bb1' : 58.2705,
+                    'B1'  : 61.7354,
+                    'Cb2'  : 61.7354,
+                    'B#1'  : 65.4064,
+                    'C2'  : 65.4064,
+                    'C#2' : 69.2957,
+                    'Db2' : 69.2957,
+                    'D2'  : 73.4162,
+                    'D#2' : 77.7817,
+                    'Eb2' : 77.7817,
+                    'E2'  : 82.4069,
+                    'Fb2'  : 82.4069,
+                    'E#2'  : 87.3071,
+                    'F2'  : 87.3071,
+                    'F#2' : 92.4986,
+                    'Gb2' : 92.4986,
+                    'G2'  : 97.9989,
+                    'G#2' : 103.826,
+                    'Ab2' : 103.826,
+                    'A2'  : 110.000,
+                    'A#2' : 116.541,
+                    'Bb2' : 116.541,
+                    'B2'  : 123.471,
+                    'Cb3'  : 123.471,
+                    'B#2'  : 130.813,
+                    'C3'  : 130.813,
+                    'C#3' : 138.591,
+                    'Db3' : 138.591,
+                    'D3'  : 146.832,
+                    'D#3' : 155.563,
+                    'Eb3' : 155.563,
+                    'E3'  : 164.814,
+                    'Fb3'  : 164.814,
+                    'E#3'  : 174.614,
+                    'F3'  : 174.614,
+                    'F#3' : 184.997,
+                    'Gb3' : 184.997,
+                    'G3'  : 195.998,
+                    'G#3' : 207.652,
+                    'Ab3' : 207.652,
+                    'A3'  : 220.000,
+                    'A#3' : 233.082,
+                    'Bb3' : 233.082,
+                    'B3'  : 246.942,
+                    'Cb4'  : 246.942,
+                    'B#3'  : 261.626,
+                    'C4'  : 261.626,
+                    'C#4' : 277.183,
+                    'Db4' : 277.183,
+                    'D4'  : 293.665,
+                    'D#4' : 311.127,
+                    'Eb4' : 311.127,
+                    'E4'  : 329.628,
+                    'Fb4'  : 329.628,
+                    'E#4'  : 349.228,
+                    'F4'  : 349.228,
+                    'F#4' : 369.994,
+                    'Gb4' : 369.994,
+                    'G4'  : 391.995,
+                    'G#4' : 415.305,
+                    'Ab4' : 415.305,
+                    'A4'  : 440.000,
+                    'A#4' : 466.164,
+                    'Bb4' : 466.164,
+                    'B4'  : 493.883,
+                    'Cb5'  : 493.883,
+                    'B#4'  : 523.251,
+                    'C5'  : 523.251,
+                    'C#5' : 554.365,
+                    'Db5' : 554.365,
+                    'D5'  : 587.330,
+                    'D#5' : 622.254,
+                    'Eb5' : 622.254,
+                    'E5'  : 659.255,
+                    'Fb5'  : 659.255,
+                    'E#5'  : 698.456,
+                    'F5'  : 698.456,
+                    'F#5' : 739.989,
+                    'Gb5' : 739.989,
+                    'G5'  : 783.991,
+                    'G#5' : 830.609,
+                    'Ab5' : 830.609,
+                    'A5'  : 880.000,
+                    'A#5' : 932.328,
+                    'Bb5' : 932.328,
+                    'B5'  : 987.767,
+                    'Cb6'  : 987.767,
+                    'B#5'  : 1046.50,
+                    'C6'  : 1046.50,
+                    'C#6' : 1108.73,
+                    'Db6' : 1108.73,
+                    'D6'  : 1174.66,
+                    'D#6' : 1244.51,
+                    'Eb6' : 1244.51,
+                    'Fb6'  : 1318.51,
+                    'E6'  : 1318.51,
+                    'E#6'  : 1396.91,
+                    'F6'  : 1396.91,
+                    'F#6' : 1479.98,
+                    'Gb6' : 1479.98,
+                    'G6'  : 1567.98,
+                    'G#6' : 1661.22,
+                    'Ab6' : 1661.22,
+                    'A6'  : 1760.00,
+                    'A#6' : 1864.66,
+                    'Bb6' : 1864.66,
+                    'B6'  : 1975.53,
+                    'Cb7'  : 1975.53,
+                    'B#6'  : 2093.00,
+                    'C7'  : 2093.00,
+                    'C#7' : 2217.46,
+                    'Db7' : 2217.46,
+                    'D7'  : 2349.32,
+                    'D#7' : 2489.02,
+                    'Eb7' : 2489.02,
+                    'E7'  : 2637.02,
+                    'Fb7'  : 2637.02,
+                    'E#7'  : 2793.83,
+                    'F7'  : 2793.83,
+                    'F#7' : 2959.96,
+                    'Gb7' : 2959.96,
+                    'G7'  : 3135.96,
+                    'G#7' : 3322.44,
+                    'Ab7' : 3322.44,
+                    'A7'  : 3520.00,
+                    'A#7' : 3729.31,
+                    'Bb7' : 3729.31,
+                    'B7'  : 3951.07,
+                    'Cb8' : 3951.07,
+                    'B#7'  : 4186.01,
+                    'C8'  : 4186.01
+                };
+            
+            
+            var pitchesArray = [ // Just an array of note names. This can be useful for mapping MIDI data to notes.
+                    'C0',
+                    'C#0',
+                    'D0',
+                    'D#0',
+                    'E0',
+                    'F0',
+                    'F#0',
+                    'G0',
+                    'G#0',
+                    'A0',
+                    'A#0',
+                    'B0',
+                    'C1',
+                    'C#1',
+                    'D1',
+                    'D#1',
+                    'E1',
+                    'F1',
+                    'F#1',
+                    'G1',
+                    'G#1',
+                    'A1',
+                    'A#1',
+                    'B1',
+                    'C2',
+                    'C#2',
+                    'D2',
+                    'D#2',
+                    'E2',
+                    'F2',
+                    'F#2',
+                    'G2',
+                    'G#2',
+                    'A2',
+                    'A#2',
+                    'B2',
+                    'C3',
+                    'C#3',
+                    'D3',
+                    'D#3',
+                    'E3',
+                    'F3',
+                    'F#3',
+                    'G3',
+                    'G#3',
+                    'A3',
+                    'A#3',
+                    'B3',
+                    'C4',
+                    'C#4',
+                    'D4',
+                    'D#4',
+                    'E4',
+                    'F4',
+                    'F#4',
+                    'G4',
+                    'G#4',
+                    'A4',
+                    'A#4',
+                    'B4',
+                    'C5',
+                    'C#5',
+                    'D5',
+                    'D#5',
+                    'E5',
+                    'F5',
+                    'F#5',
+                    'G5',
+                    'G#5',
+                    'A5',
+                    'A#5',
+                    'B5',
+                    'C6',
+                    'C#6',
+                    'D6',
+                    'D#6',
+                    'E6',
+                    'F6',
+                    'F#6',
+                    'G6',
+                    'G#6',
+                    'A6',
+                    'A#6',
+                    'B6',
+                    'C7',
+                    'C#7',
+                    'D7',
+                    'D#7',
+                    'E7',
+                    'F7',
+                    'F#7',
+                    'G7',
+                    'G#7',
+                    'A7',
+                    'A#7',
+                    'B7',
+                    'C8'
+                ];
+
+            var isAudioContextSupported = function () {
+                window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (window.AudioContext) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            };
+
+            var reportError = function (message) {
+                $('#errorMessage').html(message).show();
+            };
+
+            var init = function () {
+                if (isGetUserMediaSupported()) {
+
+                    var getUserMedia = navigator.mediaDevices && navigator.mediaDevices.getUserMedia ?
+                        navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices) :
+                        function (constraints) {
+                            return new Promise(function (resolve, reject) {
+                                navigator.getUserMedia(constraints, resolve, reject);
+                            });
+                        };
+
+                    getUserMedia({audio: true}).then(streamReceived).catch(reportError);
+                    isMicrophoneInUse = true;
+                }
+                else {
+                    reportError('It looks like this browser does not support getUserMedia. ' +
+                    'Check <a href="http://caniuse.com/#feat=stream">http://caniuse.com/#feat=stream</a> for more info.');
+                }
+
+                if (isAudioContextSupported()) {
+                    audioContext = new window.AudioContext();
+                }
+                else {
+                    reportError('AudioContext is not supported in this browser');
+                }
+            };
+
+            var noteFromPitch = function(frequency) {
+                var noteNum = 12 * (Math.log( frequency / 440 )/Math.log(2) );
+                return Math.round( noteNum ) + 69;
+            }
+
+            var isGetUserMediaSupported = function () {
+                navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                if ((navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || navigator.getUserMedia) {
+                    return true;
+                }
+
+                return false;
+            };
+
+            var findFundamentalFreq = function (buf, sampleRate) {
+                var MIN_SAMPLES = 4;    
+                var MAX_SAMPLES = 1000;
+                var SIZE = 1000;
+                var best_offset = -1;
+                var best_correlation = 0;
+                var rms = 0;
+                var foundGoodCorrelation = false;
+
+                if (buf.length < (SIZE + MAX_SAMPLES - MIN_SAMPLES))
+                    return -1;  
+
+                for ( var i = 0; i < SIZE; i++ ) {
+                    var val = ( buf[i] - 128 ) / 128;
+                    rms += val * val;
+                }
+                rms = Math.sqrt(rms/SIZE);
+                if (rms<0.01)
+                    return -1;
+
+                var lastCorrelation=1;
+                for (var offset = MIN_SAMPLES; offset <= MAX_SAMPLES; offset++) {
+                    var correlation = 0;
+
+                    for (var i=0; i<SIZE; i++) {
+                        correlation += Math.abs(((buf[i] - 128)/128)-((buf[i+offset] - 128)/128));
+                    }
+                    correlation = 1 - (correlation/SIZE);
+                    if ((correlation>0.9) && (correlation > lastCorrelation))
+                        foundGoodCorrelation = true;
+                    else if (foundGoodCorrelation) {
+                        return sampleRate/best_offset;
+                    }
+                    lastCorrelation = correlation;
+                    if (correlation > best_correlation) {
+                        best_correlation = correlation;
+                        best_offset = offset;
+                    }
+                }
+                if (best_correlation > 0.01) {
+                    return sampleRate/best_offset;
+                }
+                return -1;
+            };
+
+            var findCentsOffPitch = function (freq, refFreq) {
+                var log2 = Math.log(2);
+                var multiplicativeFactor = freq / refFreq;
+
+                var cents = Math.floor(1200 * (Math.log(multiplicativeFactor) / log2));
+                return cents;
+            };
+
+            var detectPitch = function () {
+                var buffer = new Uint8Array(analyserAudioNode.fftSize);
+                analyserAudioNode.getByteTimeDomainData(buffer);
+
+                var fundamentalFreq = findFundamentalFreq(buffer, audioContext.sampleRate);
+                var pitch = fundamentalFreq;
+                var floorPitch = Math.floor(pitch) ;
+                var note = noteFromPitch(pitch);
+                var noteName = pitchesArray[note - 12];
+                var cents = findCentsOffPitch(pitch, pitches[noteName]);
+                if (currentBeat) {
+                    // at.alphaTab('pause');
+                    if (noteName) {
+                        var inputNote = noteName.substr(0, noteName.length - 1);
+                            if (inputNote === currentNote) {
+                                $('.b' + currentBeat.Id).removeClass('noteWrong').addClass('noteRight');
+                                // at.alphaTab('play');
+                                console.log(currentBeat.id);
+                            } else {
+                                $('.b' + currentBeat.Id).addClass('noteWrong');
+                                // at.alphaTab('pause');
+                                console.log(currentBeat)
+                            
+                            }
+                    } else {
+                        $('.b' + currentBeat.Id).addClass('noteWrong');
+                        // at.alphaTab('pause')
+                    }
+                }
+
+                frameId = window.requestAnimationFrame(detectPitch);
+            };
+
+            var streamReceived = function (stream) {
+                micStream = stream;
+
+                analyserAudioNode = audioContext.createAnalyser();
+                analyserAudioNode.fftSize = 2048;
+
+                sourceAudioNode = audioContext.createMediaStreamSource(micStream);
+                sourceAudioNode.connect(analyserAudioNode);
+
+                detectPitch();
+            };
+
+            init();
+        });
+        
+        var GTR = {};
+
+        /**
+         * An array of all the notes on a guitar with 24 frets.
+         * There is one array per string.
+         */ 
+        GTR.strings = [
+            ['E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#',  'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E'],
+            ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#',  'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#',  'E', 'F', 'F#', 'G', 'G#', 'A'],
+            ['D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#',  'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D'],
+            ['G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#',  'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#',  'E', 'F', 'F#', 'G'],
+            ['B', 'C', 'C#', 'D', 'D#',  'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#',  'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+            ['E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#',  'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E'],
+        ];
+
+
+       var at = $('#alphaTab');
+       
+       //
+       // 1. setup events        
+       at.on('alphaTab.soundFontLoad', function(e, progress) {
+           var percentage = ((progress.loaded / progress.total) * 100)|0;
+           $('#soundFontProgress').css('width', percentage + '%').text(percentage + '%');
+       });
+       at.on('alphaTab.soundFontLoaded', function() {
+           $('#soundFontProgressMenuItem').hide();
+       });
+       at.on('alphaTab.playerReady', function() {
+           $('#loadingInfo').hide();
+           $('#playPause').prop('disabled', false).removeAttr('disabled');            
+           $('#stop').prop('disabled', false).removeAttr('disabled');            
+           $('#looping').prop('disabled', false).removeAttr('disabled');            
+           $('#metronome').prop('disabled', false).removeAttr('disabled');            
+           updateControls();
+       });
+       at.on('alphaTab.playerStateChanged', function() {
+           updateControls();
+       });
+       at.on('alphaTab.positionChanged', function(event, data) {
+            var bc = $('.beatCursor');
+            var y = bc.offset().top;
+            var x = bc.offset().left;
+            var cc = at.alphaTab('getCursorCache');
+            if (stop) {
+                stop = false;
+            } else {
+                if (cc) {
+                    var beat = cc.GetBeatAtPos(x,y);
+                    var string = beat.Notes[0].String - 1;
+                    var fret = beat.Notes[0].Fret;
+                    var note = GTR.strings[string][fret];
+                    currentNote = note;
+                    currentBeat = beat;
+                }  
+            }
+       });
+       //
+       // 2. Load alphaTab 
+       at.alphaTab();
+       //
+       // 3. Setup UI controls and use API to control the playback 
+       
+       $('#print').click(function() { 
+           at.alphaTab('print');
+       });
+       
+       $('#playPause').click(function() { 
+           at.alphaTab('metronomeVolume', 1);
+           setTimeout(function(){
+            at.alphaTab('metronomeVolume', 0);
+            at.alphaTab('playPause');
+           }, 4000);
+       });
+       
+       $('#stop').click(function() { 
+           at.alphaTab('stop');
+           setTimeout(function() {
+                $('.noteRight').removeClass('noteRight');
+                $('.noteWrong').removeClass('noteWrong');
+           }, 100);
+           stop = true;
+       });
+       
+       $('#looping').click(function(e) {
+           e.preventDefault();
+           var looping = !at.alphaTab('loop');
+           at.alphaTab('loop', looping);
+           if(looping) {
+               $('#looping').closest('li').addClass('active');
+           }
+           else {
+               $('#looping').closest('li').removeClass('active');
+           }
+       });
+       
+       $('#metronome').click(function(e) {
+           e.preventDefault();
+           var metronomeVolume = at.alphaTab('metronomeVolume');
+           if(metronomeVolume == 0) {
+               at.alphaTab('metronomeVolume', 1);
+               $('#metronome').closest('li').addClass('active');
+           }
+           else {
+               at.alphaTab('metronomeVolume', 0);
+               $('#metronome').closest('li').removeClass('active');
+           }
+       });
+       
+       $('#playbackSpeedSelector a').click(function() {
+           var playbackSpeed = $(this).data('value');
+           at.alphaTab('playbackSpeed', playbackSpeed);
+           $('#playbackSpeed').text($(this).text());
+       }); 
+       
+       function updateControls() {
+           var playerState = at.alphaTab('playerState');
+           switch(playerState) {
+               case 0: // stopped/paused
+               $('#playPause').removeClass('glyphicon-pause').addClass('glyphicon-play');
+               $('.noteRight').removeClass('noteRight');
+               $('.noteWrong').removeClass('noteWrong');
+               break;
+               case 1: // playing
+               $('#playPause').removeClass('glyphicon-play').addClass('glyphicon-pause');
+               break;
+           }
+       }     
+       
+       $('a[data-layout]').click(function(e) {
+           $('a[data-layout]').closest('li').removeClass('active');
+           $(this).closest('li').addClass('active');
+           
+           e.preventDefault();
+           
+           var layout = $(this).data('layout');
+           var scrollmode = $(this).data('scrollmode');
+           
+           at.removeClass('horizontal page');
+           at.addClass(layout);
+           
+           // update renderer
+           at.alphaTab('layout', layout);
+           
+           // update player
+           at.alphaTab('autoScroll', scrollmode);
+           $('body,html').animate({
+               scrollTop: 0 
+           }, 300);
+       });
+   
+       //
+       // 4. Track selector
+       var tracks = [];
+       // keep dropdown open
+       $('#trackList').on('click', function(e) {
+           e.stopPropagation();
+       });
+       at.on('alphaTab.loaded', function(e, score) {
+           var trackList = $('#trackList');
+           trackList.empty();
+           
+           for( var i = 0; i < score.Tracks.length; i++) {
+               // build list item for track
+               var li = $('<li></li>')
+                   .data('track', score.Tracks[i].Index)
+               ;
+               
+               // show/hide button and track title
+               var title = $('<div class="title"></div>');
+               li.append(title);
+               
+               var showHide = $('<i class="glyphicon glyphicon-eye-close showHide"></i>');
+               title.append(showHide);
+               title.append(score.Tracks[i].Name);
+               title.on('click', function(e) {
+                   var track = $(this).closest('li').data('track');
+                   tracks = [track];
+                   $(this).find('.showHide').removeClass('glyphicon-eye-close').addClass('glyphicon-eye-open');
+                   
+                   // render new tracks
+                   at.alphaTab('tracks', tracks);   
+               });
+               
+               // solo and mute buttons
+               var soloMute = $('<div class="btn-group btn-group-xs"></div>');
+               var solo = $('<button type="button" class="btn btn-default solo">Solo</button>');
+               solo.on('click', function(e) {
+                   $(this).toggleClass('checked');
+                   var isSolo = $(this).hasClass('checked');
+                   var track = $(this).closest('li').data('track');
+                   at.alphaTab('soloTrack', track, isSolo);                    
+               });
+               
+               var mute = $('<button type="button" class="btn btn-default mute">Mute</button>');
+               mute.on('click', function(e) {
+                   $(this).toggleClass('checked');
+                   var isMute = $(this).hasClass('checked');
+                   var track = $(this).closest('li').data('track');
+                   at.alphaTab('muteTrack', track, isMute);                    
+               });                
+               soloMute.append(solo).append(mute);
+               li.append(soloMute);
+               
+               // volume slider
+               var volume = $('<input type="text" />')
+                   .on('slide', function(e) {
+                       var track = $(this).closest('li').data('track');
+                       at.alphaTab('trackVolume', track, e.value);
+                   });
+               li.append(volume);
+               volume.slider({
+                   min: 0,
+                   max: 16,
+                   step: 1,
+                   value: score.Tracks[i].PlaybackInfo.Volume,
+                   handle: 'square'
+               })
+               
+               trackList.append(li);
+           }
+       });
+       at.on('alphaTab.rendered', function(e) {
+           // load track indices
+           tracks = at.alphaTab('tracks');
+           for(var i = 0; i < tracks.length; i++) {
+               tracks[i] = tracks[i].Index;
+           }    
+
+           // check checkboxes 
+           $('#trackList li').each(function() {
+               var track = $(this).data('track');
+               var isSelected = tracks.indexOf(track) > -1;
+               if(isSelected) {
+                   $(this).find('.showHide').removeClass('glyphicon-eye-close').addClass('glyphicon-eye-open');
+               }
+               else {
+                   $(this).find('.showHide').removeClass('glyphicon-eye-open').addClass('glyphicon-eye-close');
+               }
+           });       
+       });
+    
+    </script>
+    
+</body>
+</html>     
